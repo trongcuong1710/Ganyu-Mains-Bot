@@ -1,0 +1,25 @@
+const { Command } = require('discord-akairo');
+const Discord = require('discord.js');
+const client = require('nekos.life');
+const neko = new client();
+
+class CuddleCommand extends Command {
+	constructor() {
+		super('cuddle', {
+			aliases: ['cuddle'],
+			category: 'Social',
+			channel: 'guild',
+			cooldown: 60000,
+			description: {
+				description: 'Cuddle a user.',
+				usage: 'cuddle <user>',
+			},
+		});
+	}
+
+	async exec(message) {
+		neko.sfw.cuddle().then((cuddle) => message.channel.send(cuddle.url));
+	}
+}
+
+module.exports = CuddleCommand;
