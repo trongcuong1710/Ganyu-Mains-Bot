@@ -58,7 +58,7 @@ class MyClient extends AkairoClient {
 
 		mongoose
 			.connect(
-				'mongodb+srv://zyla:6931528Erencan34@ganyu.nvee0.mongodb.net/GanyuBot_Database?retryWrites=true&w=majority',
+				process.env.MONGOOSE_URL,
 				{
 					useNewUrlParser: true,
 					useUnifiedTopology: true,
