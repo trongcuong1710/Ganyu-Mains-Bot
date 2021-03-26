@@ -82,7 +82,7 @@ class WarnCommand extends Command {
 			return Math.floor(Math.random() * (max - min + 1)) + min; //The maximum is inclusive and the minimum is inclusive
 		}
 
-		await this.client.db.warn
+		await this.client.db.warns
 			.create({
 				warnID: getRandomIntInclusive(1, 10000),
 				warnedMember: args.member.id,
