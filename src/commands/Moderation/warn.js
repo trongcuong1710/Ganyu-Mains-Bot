@@ -8,7 +8,6 @@ class WarnCommand extends Command {
 			aliases: ['warn', 'w'],
 			ownerOnly: false,
 			category: 'Moderation',
-			clientPermissions: 'KICK_MEMBERS',
 			channel: 'guild',
 			args: [
 				{
