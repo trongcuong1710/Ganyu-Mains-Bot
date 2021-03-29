@@ -1,13 +1,3 @@
-const express = require('express');
-const app = express();
-const port = 3000;
-
-app.get('/', (req, res) => res.send('Hello World!'));
-
-app.listen(port, () =>
-	console.log(`Example app listening at http://localhost:${port}`),
-);
-
 const {
 	AkairoClient,
 	CommandHandler,
@@ -57,14 +47,11 @@ class MyClient extends AkairoClient {
 		this.listenerHandler.loadAll();
 
 		mongoose
-			.connect(
-				process.env.MONGOOSE_URL,
-				{
-					useNewUrlParser: true,
-					useUnifiedTopology: true,
-					useFindAndModify: false,
-				},
-			)
+			.connect(process.env.MONGOOSE_URL, {
+				useNewUrlParser: true,
+				useUnifiedTopology: true,
+				useFindAndModify: false,
+			})
 			.then(() => console.log('Connected to the database!'));
 
 		this.db = {
