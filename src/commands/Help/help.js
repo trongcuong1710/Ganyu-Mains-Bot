@@ -181,6 +181,11 @@ class HelpCommand extends Command {
 
 		const UtilityCommands = new Discord.MessageEmbed().addFields([
 			{
+				name: 'calculate',
+				value: 'Does math for you.',
+				inline: true,
+			},
+			{
 				name: 'addquote',
 				value:
 					'Adds a quote to the database for future use, can be embed but optional.',
