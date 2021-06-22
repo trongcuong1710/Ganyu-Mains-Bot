@@ -1,7 +1,6 @@
 const { Listener } = require('discord-akairo');
 const { MessageEmbed, MessageAttachment } = require('discord.js');
 const roles = require('../../Constants/roles.json');
-const channels = require('../../Constants/channels.json');
 const moment = require('moment');
 
 class GuildMemberUpdateListener extends Listener {
@@ -15,9 +14,6 @@ class GuildMemberUpdateListener extends Listener {
 
   async exec(oldMember, newMember) {
     moment.locale('en');
-    const memberLogsCH = global.guild.channels.cache.get(
-      channels.memberLogsChannel
-    );
     //? Nitro Booster
     //#region If nitro booster.
     const nitroBoosterRole = global.guild.roles.cache.get(
