@@ -1,105 +1,94 @@
 const { Command } = require('discord-akairo');
-const Discord = require('discord.js');
+const { MessageEmbed } = require('discord.js');
 const moment = require('moment');
 
 class KickCommand extends Command {
-	constructor() {
-		super('kick', {
-			aliases: ['kick', 'k'],
-			ownerOnly: false,
-			category: 'Moderation',
-			channel: 'guild',
-			clientPermissions: 'KICK_MEMBERS',
-			args: [
-				{
-					id: 'member',
-					type: 'member',
-				},
-				{
-					id: 'reason',
-					type: 'string',
-					match: 'rest',
-				},
-			],
-			description: {
-				description: 'Kicks the member.',
-				usage: 'kick <user> <reason>',
-			},
-		});
-	}
+  constructor() {
+    super('kick', {
+      aliases: ['kick', 'k'],
+      ownerOnly: false,
+      category: 'Moderation',
+      channel: 'guild',
+      userPermissions: 'KICK_MEMBERS',
+      clientPermissions: 'KICK_MEMBERS',
+      args: [
+        {
+          id: 'member',
+          type: (message, phrase) => {
+            return this.client.util.resolveMember(
+              phrase,
+              message.guild.members.cache,
+              false,
+              true
+            );
+          },
+        },
+        {
+          id: 'reason',
+          type: 'string',
+          match: 'rest',
+        },
+      ],
+      description: {
+        description: 'Kicks the member.',
+        usage: 'kick <member> [reason]',
+      },
+    });
+  }
 
-	async exec(message, args) {
-		if (!args.member)
-			return message.channel.send(
-				new Discord.MessageEmbed({
-					description: `Please supply a member to kick.`,
-				}),
-			);
-		if (!args.reason)
-			return message.channel.send(
-				new Discord.MessageEmbed({
-					description: `Please supply a reason for the kick.`,
-				}),
-			);
-		const kickedToDMEmbed = new Discord.MessageEmbed()
-			.setTitle(`You've been kicked from ${message.guild.name}`)
-			.setDescription(
-				`**Moderator:** ${message.author.tag}\n**Reason:** ${
-					args.reason
-				}\n**Kicked At:** ${moment().format('MMMM Do, hh:mm:ss a')}`,
-			)
-			.setFooter(
-				`If you think you're wrongfully kicked, please contact an Admin.`,
-			);
-		const cantKickStaffEmbed = new Discord.MessageEmbed().setDescription(
-			`Sorry but you can't kick other staff members/staff members that has higher perms than you.`,
-		);
-		const permRoles = [
-			'803065968426352640', // Qixing Secretary
-			'795102781346021376', // Head Admin
-			'786025543124123698', // Server Admin
-			'786025543124123699', // Network Admin
-			'786025543085981705', // Moderator
-		];
-		var i;
-		for (i = 0; i <= permRoles.length; i++) {
-			if (
-				message.member.roles.cache
-					.map((x) => x.id)
-					.filter((x) => permRoles.includes(x)).length === 0
-			)
-				return message.channel.send(
-					new Discord.MessageEmbed().setDescription(
-						"You can't do that with the permissions you have.",
-					),
-				);
-		}
-		if (
-			args.member.roles.highest.position >=
-			message.member.roles.highest.position
-		)
-			return message.channel.send(cantKickStaffEmbed);
+  async exec(message, args) {
+    moment.locale('en');
+    const prefix = this.client.commandHandler.prefix;
+    if (!args.member)
+      return message.channel.send(
+        new MessageEmbed({
+          color: 'RED',
+          description: `\`\`\`\n${
+            prefix + this.id
+          } <member> [reason]\n      ^^^^^^^^\nmember is a required argument that is missing.\`\`\``,
+        })
+      );
 
-		await args.member
-			.kick(args.reason)
-			.then(() => {
-				args.member.send(kickedToDMEmbed).catch((err) => {
-					return;
-				});
-				message.channel.send(
-					new Discord.MessageEmbed({
-						description: `Successfully kicked ${args.member} with the reason: ${args.reason}.`,
-					}),
-				);
-			})
-			.catch((err) => {
-				message.channel.send(
-					new Discord.MessageEmbed({
-						description: `There was an error occurred while trying to kick ${args.member}.\n**Error**: \`${err.message}\``,
-					}),
-				);
-			});
-	}
+    if (args.member.id === message.member.id)
+      return message.channel.send(
+        new MessageEmbed({
+          color: 'RED',
+          description: `You can't kick yourself!`,
+        })
+      );
+
+    if (args.member === message.guild.me)
+      return message.channel.send(
+        new MessageEmbed({
+          color: 'RED',
+          description: `You can't kick me!`,
+        })
+      );
+
+    if (
+      args.member.roles.highest.position >=
+      message.member.roles.highest.position
+    )
+      return message.channel.send(
+        new MessageEmbed({
+          color: 'RED',
+          description: `You can't warn someone with an equal or higher role!`,
+        })
+      );
+
+    if (!args.reason) args.reason = 'None Provided';
+    if (args.reason.length > 1024) reason = reason.slice(0, 1021) + '...';
+
+    await args.member.kick(args.reason).then(async () => {
+      message.channel.send(
+        new MessageEmbed({
+          color: 'GREEN',
+          description: `Kicked **${args.member.user.tag}**.`,
+          footer: { text: `ID: ${args.member.id}` },
+        })
+      );
+    });
+  }
 }
 
 module.exports = KickCommand;

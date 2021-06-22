@@ -1,13 +1,12 @@
 const mongoose = require('mongoose');
 
 module.exports = mongoose.model(
-  'warns',
+  'mutes',
   new mongoose.Schema({
-    warnID: Number,
-    warnedMember: String,
-    warnedStaff: String,
+    member_id: String,
+    responsibleStaff: String,
     reason: String,
-    when: Date,
+    unmuteDate: Number,
   }),
-  'warns'
+  'mutes'
 );

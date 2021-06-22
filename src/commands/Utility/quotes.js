@@ -1,85 +1,89 @@
 const { Command } = require('discord-akairo');
-const Discord = require('discord.js');
-const moment = require('moment');
+const { MessageEmbed, MessageAttachment } = require('discord.js');
 
 class QuotesCommand extends Command {
-	constructor() {
-		super('quotes', {
-			aliases: ['quotes'],
-			ownerOnly: false,
-			category: 'Utility',
-			channel: 'guild',
-			args: [
-				{
-					id: 'quoteName',
-					type: 'string',
-				},
-			],
-			description: {
-				description: 'Shows list of quotes.',
-				usage: 'quotes',
-			},
-		});
-	}
+  constructor() {
+    super('quotes', {
+      aliases: ['quotes'],
+      ownerOnly: false,
+      category: 'Utility',
+      channel: 'guild',
+      args: [
+        {
+          id: 'quoteName',
+          type: 'string',
+        },
+      ],
+      description: {
+        description: 'Shows list of quotes.',
+        usage: 'quotes',
+      },
+    });
+  }
 
-	async exec(message, args) {
-		const permRoles = [
-			'803065968426352640', // Qixing Secretary
-			'795102781346021376', // Head Admin
-			'786025543124123698', // Server Admin
-			'786025543124123699', // Network Admin
-			'786025543085981705', // Moderator
-			'802560679767965717', // Guiding Goat
-		];
-		var i;
-		for (i = 0; i <= permRoles.length; i++) {
-			if (
-				message.member.roles.cache
-					.map((x) => x.id)
-					.filter((x) => permRoles.includes(x)).length === 0
-			)
-				return message.channel.send(
-					new Discord.MessageEmbed().setDescription(
-						"You can't do that with the permissions you have.",
-					),
-				);
-		}
-		const quotes = await this.client.db.quotes.find();
-		const noQuotesEmbed = new Discord.MessageEmbed().setDescription(
-			`There are no quotes in the database.`,
-		);
-		if (!quotes.length) return message.channel.send(noQuotesEmbed);
-		async function showQuotes() {
-			return message.channel.send(
-				new Discord.MessageEmbed({
-					description: quotes
-						.map((x) => `**Quote Name**: ${x.quoteName}`)
-						.join('\n'),
-				}),
-			);
-		}
-		if (!args.quoteName) return showQuotes();
-		const quoteOfName = await this.client.db.quotes.find({
-			quoteName: args.quoteName,
-		});
-		async function showWarnOfID() {
-			return message.channel.send(
-				new Discord.MessageEmbed({
-					description: quoteOfName
-						.map(
-							(x) =>
-								`**Quote Name**: ${x.quoteName}\n**Quote Returns**: ${
-									x.quote
-								}\n**Added By**: ${x.by}\n**Date & Time**: ${moment().format(
-									'LLLL',
-								)}`,
-						)
-						.join('\n'),
-				}),
-			);
-		}
-		showWarnOfID();
-	}
+  async exec(message, args) {
+    const quotes = await this.client.db.quotes.find();
+
+    if (!quotes.length)
+      return message.channel.send(
+        new MessageEmbed({
+          description: `There are no quotes in the database.`,
+        })
+      );
+
+    if (!args.quoteName) {
+      const list = quotes.map((x) => `Quote Name: ${x.quoteName}`).join('\n');
+      return message.channel.send(
+        `You can use \`.quotes <quoteName>\` to view a quote.`,
+        new MessageAttachment(Buffer.from(list), 'quotes.txt')
+      );
+    }
+
+    const quoteIsRegistered = await this.client.db.quotes.findOne({
+      quoteName: args.quoteName,
+    });
+
+    if (!quoteIsRegistered)
+      return message.channel.send(
+        new MessageEmbed({
+          color: 'RED',
+          description: `Quote: \`${args.quoteName}\`\nDoes not exist in the database.`,
+        })
+      );
+    const quoteOfName = await this.client.db.quotes.find({
+      quoteName: args.quoteName,
+    });
+    const quoteFromNameNoEmbed = quoteOfName
+      .map(
+        (x) =>
+          `Quote Name: ${x.quoteName}\nQuote Returns: ${x.quote}\nAdded By: ${x.by}`
+      )
+      .join('\n');
+    const quoteFromNameYesEmbed = quoteOfName
+      .map(
+        (x) =>
+          `Quote Name: ${x.quoteName}\nAdded By: ${x.by}\nEmbed Source: ${x.quote}\nDown below you can see a preview of the embed.`
+      )
+      .join('\n');
+    const quoteFromNameAttachment = new MessageAttachment(
+      Buffer.from(quoteFromNameNoEmbed),
+      `${args.quoteName}.txt`
+    );
+    const quoteFromNameAttachmentWithEmbed = new MessageAttachment(
+      Buffer.from(quoteFromNameYesEmbed),
+      `${args.quoteName}.txt`
+    );
+    const isQuoteEmbed = quoteOfName.map((x) => x.embed).join('\n');
+    if (isQuoteEmbed == 'false') message.channel.send(quoteFromNameAttachment);
+    else {
+      message.channel.send([
+        this.client.util.embed(
+          JSON.parse(quoteOfName.map((x) => x.quote).join('\n'))
+        ),
+        quoteFromNameAttachmentWithEmbed,
+      ]);
+    }
+  }
 }
 
 module.exports = QuotesCommand;

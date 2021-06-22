@@ -1,115 +1,148 @@
 const { Command } = require('discord-akairo');
-const Discord = require('discord.js');
+const { MessageEmbed } = require('discord.js');
 var moment = require('moment');
+const channels = require('../../Constants/channels.json');
 
 class WarnCommand extends Command {
-	constructor() {
-		super('warn', {
-			aliases: ['warn', 'w'],
-			ownerOnly: false,
-			category: 'Moderation',
-			channel: 'guild',
-			args: [
-				{
-					id: 'member',
-					type: 'member',
-				},
-				{
-					id: 'reason',
-					type: 'string',
-					match: 'rest',
-				},
-			],
-			description: {
-				description: 'Warns a member and saving the warn in their warn list.',
-				usage: 'warn <member> <reason>',
-			},
-		});
-	}
+  constructor() {
+    super('warn', {
+      aliases: ['warn', 'w'],
+      ownerOnly: false,
+      category: 'Moderation',
+      channel: 'guild',
+      args: [
+        {
+          id: 'member',
+          type: (message, phrase) => {
+            return this.client.util.resolveMember(
+              phrase,
+              message.guild.members.cache,
+              false,
+              true
+            );
+          },
+        },
+        {
+          id: 'reason',
+          type: 'string',
+          match: 'rest',
+        },
+      ],
+      description: {
+        description: 'Warn a member.',
+        usage: 'warn <member> <reason>',
+      },
+    });
+  }
 
-	async exec(message, args) {
-		if (!args.member)
-			return message.channel.send(
-				new Discord.MessageEmbed({
-					description: `Please supply a user to warn.`,
-				}),
-			);
-		if (!args.reason)
-			return message.channel.send(
-				new Discord.MessageEmbed({
-					description: `Please supply a reason to add into the database.`,
-				}),
-			);
-		const permRoles = [
-			'803065968426352640', // Qixing Secretary
-			'795102781346021376', // Head Admin
-			'786025543124123698', // Server Admin
-			'786025543124123699', // Network Admin
-			'786025543085981705', // Moderator
-		];
-		var i;
-		for (i = 0; i <= permRoles.length; i++) {
-			if (
-				message.member.roles.cache
-					.map((x) => x.id)
-					.filter((x) => permRoles.includes(x)).length === 0
-			)
-				return message.channel.send(
-					new Discord.MessageEmbed().setDescription(
-						"You can't do that with the permissions you have.",
-					),
-				);
-		}
-		const warnedToDMEmbed = new Discord.MessageEmbed()
-			.setTitle(`You've been warned in ${message.guild.name}`)
-			.setDescription(
-				`**Moderator:** ${message.author.tag}\n**Reason:** ${
-					args.reason
-				}\n**Warned At:** ${moment().format('MMMM Do, hh:mm:ss a')}`,
-			)
-			.setThumbnail(args.member.user.displayAvatarURL({ dynamic: true }))
-			.setFooter(
-				`If you think you're wrongfully warned, please contact an Admin.`,
-			);
+  async exec(message, args) {
+    moment.locale('en');
+    const prefix = this.client.commandHandler.prefix;
+    if (!args.member)
+      return message.channel.send(
+        new MessageEmbed({
+          color: 'RED',
+          description: `\`\`\`\n${
+            prefix + this.id
+          } <member> [reason]\n      ^^^^^^^^\nmember is a required argument that is missing.\`\`\``,
+        })
+      );
+    if (args.member.id === message.member.id)
+      return message.channel.send(
+        new MessageEmbed({
+          color: 'RED',
+          description: `You can't warn yourself!`,
+        })
+      );
+    if (args.member === message.guild.me)
+      return message.channel.send(
+        new MessageEmbed({
+          color: 'RED',
+          description: `You can't warn me!`,
+        })
+      );
+    if (
+      args.member.roles.highest.position >=
+      message.member.roles.highest.position
+    )
+      return message.channel.send(
+        new MessageEmbed({
+          color: 'RED',
+          description: `You can't warn someone with an equal or higher role!`,
+        })
+      );
 
-		const warnedToChannelEmbed = new Discord.MessageEmbed().setDescription(
-			`${args.member} is successfully warned for "${args.reason}".\nUse \`x!warns ${args.member.user.username}\` for details.`,
-		);
+    let reason = args.reason;
+    if (!args.reason) reason = `No Reason Provided.`;
 
-		function getRandomIntInclusive(min, max) {
-			min = Math.ceil(min);
-			max = Math.floor(max);
-			return Math.floor(Math.random() * (max - min + 1)) + min; //The maximum is inclusive and the minimum is inclusive
-		}
+    const roles = [
+      '803065968426352640', // TDA's owner role
+      '786025543124123698', // Admin
+      '786025543085981705', // Mod
+    ];
+    var i;
+    for (i = 0; i <= roles.length; i++) {
+      if (
+        message.member.roles.cache
+          .map((x) => x.id)
+          .filter((x) => roles.includes(x)).length === 0
+      )
+        return message.channel.send(
+          new MessageEmbed({
+            color: 'RED',
+            description: "You can't do that with the permissions you have.",
+          })
+        );
+    }
 
-		await this.client.db.warns
-			.create({
-				warnID: getRandomIntInclusive(1, 10000),
-				warnedMember: args.member.id,
-				warnedStaff: message.author.id,
-				reason: args.reason,
-				when: message.createdAt,
-			})
-			.then(() => message.channel.send(warnedToChannelEmbed))
-			.then(() =>
-				args.member
-					.send(warnedToDMEmbed)
-					.catch(async (err) =>
-						message.channel.send(
-							new Discord.MessageEmbed().setDescription(
-								`${args.member}'s DMs are closed, therefore I could not DM them about this.`,
-							),
-						),
-					),
-			)
-			.catch((err) => {
-				message.channel.send(
-					new Discord.MessageEmbed({
-						description: `An error occurred while trying to warn the user.\n**Error**: ${err.message}`,
-					}),
-				);
-			});
-	}
+    function getRandomIntInclusive(min, max) {
+      min = Math.ceil(min);
+      max = Math.floor(max);
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    moment.locale('en');
+    await this.client.db.warns
+      .create({
+        warnID: getRandomIntInclusive(1, 10000),
+        warnedMember: args.member,
+        warnedStaff: message.author,
+        reason: reason,
+        when: moment().format('LLLL'),
+      })
+      .then(async (c) => {
+        await message.channel
+          .send(
+            new MessageEmbed({
+              color: 'GREEN',
+              description: `${args.member.user.tag} has now been warned.`,
+              fields: [
+                {
+                  name: `View`,
+                  value: `${this.client.commandHandler.prefix}warns ${args.member} ${c.warnID}`,
+                },
+                {
+                  name: `Remove`,
+                  value: `${this.client.commandHandler.prefix}removewarn ${args.member} ${c.warnID}`,
+                },
+              ],
+            })
+          )
+          .then(async () => {
+            await this.client.channels.cache
+              .get(channels.punishmentLogsChannel)
+              .send(
+                new MessageEmbed({
+                  color: 'GREEN',
+                  title: `Warned`,
+                  description: `**Offender**: ${args.member.user.tag}\n**Responsible Staff**: ${message.author.tag}\n**Reason**: ${reason}`,
+                  footer: { text: `ID: ${args.member.id}` },
+                  timestamp: new Date(),
+                })
+              );
+          });
+      });
+  }
 }
 
 module.exports = WarnCommand;

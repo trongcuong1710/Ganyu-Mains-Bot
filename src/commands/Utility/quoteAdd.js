@@ -1,96 +1,133 @@
 const { Command } = require('discord-akairo');
-const Discord = require('discord.js');
-const mongoose = require('mongoose');
+const { MessageEmbed } = require('discord.js');
+const channels = require('../../Constants/channels.json');
+const moment = require('moment');
 
 class AddQuoteCommand extends Command {
-	constructor() {
-		super('addquote', {
-			aliases: ['addquote', 'aq'],
-			ownerOnly: false,
-			category: 'Utility',
-			channel: 'guild',
-			args: [
-				{
-					id: 'quote',
-					type: 'string',
-				},
-				{
-					id: 'answer',
-					type: 'string',
-					match: 'rest',
-				},
-			],
-			description: {
-				description: 'Add a quote to the database and call it when needed.',
-				usage: 'addquote <quoteName> <message>',
-			},
-		});
-	}
+  constructor() {
+    super('addquote', {
+      aliases: ['addquote', 'aq'],
+      ownerOnly: false,
+      category: 'Utility',
+      channel: 'guild',
+      args: [
+        {
+          id: 'quote',
+          type: 'string',
+        },
+        {
+          id: 'answer',
+          type: 'string',
+          match: 'rest',
+        },
+      ],
+      description: {
+        description: 'Add a quote to the database and call it when needed.',
+        usage: 'addquote <trigger> <message/JSON for embed>',
+      },
+    });
+  }
 
-	async exec(message, args) {
-		if (!args.quote)
-			return message.channel.send(
-				new Discord.MessageEmbed({
-					description: `Please supply a quote name to add into the database.`,
-				}),
-			);
-		if (!args.answer)
-			return message.channel.send(
-				new Discord.MessageEmbed({
-					description: `Please supply a quote answer to add into the database.`,
-				}),
-			);
-		const permRoles = [
-			'803065968426352640', // Qixing Secretary
-			'795102781346021376', // Head Admin
-			'786025543124123698', // Server Admin
-			'786025543124123699', // Network Admin
-			'786025543085981705', // Moderator
-			'802560679767965717', // Guiding Goat
-		];
-		var i;
-		for (i = 0; i <= permRoles.length; i++) {
-			if (
-				message.member.roles.cache
-					.map((x) => x.id)
-					.filter((x) => permRoles.includes(x)).length === 0
-			)
-				return message.channel.send(
-					new Discord.MessageEmbed().setDescription(
-						"You can't do that with the permissions you have.",
-					),
-				);
-		}
-		let data;
-		let embed = false;
-		try {
-			data = JSON.stringify(
-				new Discord.MessageEmbed(JSON.parse(args.answer)).toJSON(),
-			);
+  async exec(message, args) {
+    moment.locale('en');
+    if (!args.quote)
+      return message.channel.send(
+        new MessageEmbed({
+          description: `Please supply a quote name to add into the database.`,
+        })
+      );
+    if (!args.answer)
+      return message.channel.send(
+        new MessageEmbed({
+          description: `Please supply a quote answer to add into the database.`,
+        })
+      );
+    const roles = [
+      '803065968426352640', // TDA's owner role
+      '786025543124123698', // Admin
+      '786025543085981705', // Mod
+      '802560679767965717', // Guiding Goat
+    ];
+    var i;
+    for (i = 0; i <= roles.length; i++) {
+      if (
+        message.member.roles.cache
+          .map((x) => x.id)
+          .filter((x) => roles.includes(x)).length === 0
+      )
+        return message.channel.send(
+          new MessageEmbed({
+            color: 'RED',
+            description: "You can't do that with the permissions you have.",
+          })
+        );
+    }
 
-			embed = true;
-		} catch (_) {
-			data = args.answer;
-		}
-		if (!(await this.client.db.quotes.findOne({ quoteName: args.quote }))) {
-			await this.client.db.quotes.create({
-				quoteName: args.quote,
-				quote: data,
-				by: message.author.tag,
-				embed: embed,
-			});
-		} else
-			return message.channel.send(
-				new Discord.MessageEmbed().setDescription(
-					`**${args.quote}** is already in the database!`,
-				),
-			);
-		message.channel.send(
-			new Discord.MessageEmbed({
-				description: `**Quote Added to the Database!**\n\n**Quote Name**: ${args.quote}\n**Quote Returns**: ${args.answer}\n**Added By**: <@${message.author.id}>`,
-			}),
-		);
-	}
+    let data;
+    let embed = false;
+    try {
+      data = JSON.stringify(new MessageEmbed(JSON.parse(args.answer)).toJSON());
+
+      embed = true;
+    } catch (_) {
+      data = args.answer;
+    }
+    if (!(await this.client.db.quotes.findOne({ quoteName: args.quote }))) {
+      await this.client.db.quotes
+        .create({
+          quoteName: args.quote,
+          quote: data,
+          by: message.author.tag,
+          embed: embed,
+        })
+        .then(() => {
+          message.channel.send(
+            new MessageEmbed({
+              color: 'GREEN',
+              description: `**${args.quote}** has now been added.`,
+              footer: { text: 'View logs for details.' },
+            })
+          );
+          this.client.channels.cache.get(channels.databaseLogsChannel).send(
+            new MessageEmbed({
+              color: 'GREEN',
+              title: `Quote Added`,
+              description: `**${args.quote}** has now been added.`,
+              files: [
+                {
+                  id: 'quote.txt',
+                  attachment: Buffer.from(args.answer, 'utf8'),
+                  name: `quote.txt`,
+                },
+              ],
+              fields: [
+                {
+                  name: `Responsible Staff`,
+                  value: message.member,
+                  inline: true,
+                },
+                { name: `Quote Name`, value: args.quote, inline: true },
+                {
+                  name: `Quote Is`,
+                  value: 'View Attachment',
+                  inline: false,
+                },
+                {
+                  name: `Added At`,
+                  value: moment().format('LLLL'),
+                  inline: true,
+                },
+              ],
+            })
+          );
+        });
+    } else
+      return message.channel.send(
+        new MessageEmbed().setDescription(
+          `**${args.quote}** is already in the database!`
+        )
+      );
+  }
 }
 
 module.exports = AddQuoteCommand;

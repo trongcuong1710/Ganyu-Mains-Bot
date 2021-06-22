@@ -1,10 +1,10 @@
 const mongoose = require('mongoose');
 
 module.exports = mongoose.model(
-  'blacklists',
+  'customRoles',
   new mongoose.Schema({
-    channel_id: String,
-    blacklistedBy: String,
+    roleID: String,
+    roleOwner: String,
   }),
-  'blacklists'
+  'customRoles'
 );

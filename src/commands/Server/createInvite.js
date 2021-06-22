@@ -1,44 +1,33 @@
 const { Command } = require('discord-akairo');
-const { Guild } = require('discord.js');
-const Discord = require('discord.js');
+const moment = require('moment');
 
-class CreateInviteCommand extends Command {
-	constructor() {
-		super('createinvite', {
-			aliases: ['createinvite', 'invite', 'inv'],
-			ownerOnly: false,
-			category: 'Server',
-			channel: 'guild',
-			cooldown: 10000,
-			description: {
-				description: 'Creates invite for the server and sends it.',
-				usage: 'createinvite or inv',
-			},
-		});
-	}
+class InviteCommand extends Command {
+  constructor() {
+    super('invite', {
+      aliases: ['invite', 'inv'],
+      ownerOnly: false,
+      category: 'Server',
+      channel: 'guild',
+      clientPermissions: 'CREATE_INSTANT_INVITE',
+      userPermissions: 'CREATE_INSTANT_INVITE',
+      cooldown: 10000,
+      description: {
+        description: 'Creates invite for the server and sends it.',
+        usage: 'createinvite',
+      },
+    });
+  }
 
-	exec(message) {
-		const checkPermsEmbed = new Discord.MessageEmbed().setDescription(
-			"Apparently you can't create invite.",
-		);
-		if (!message.member.hasPermission('CREATE_INSTANT_INVITE'))
-			return message.channel.send(checkPermsEmbed);
-		if (!message.guild.vanityURLCode)
-			return message.channel
-				.createInvite()
-				.then((invite) =>
-					message.channel.send(`https://discord.gg/${invite.code}`),
-				)
-				.catch(console.error);
-		return message.channel
-			.createInvite()
-			.then(() =>
-				message.channel.send(
-					`https://discord.gg/${message.guild.vanityURLCode}`,
-				),
-			)
-			.catch(console.error);
-	}
+  async exec(message) {
+    moment.locale('en');
+    if (!message.guild.vanityURLCode)
+      return message.channel.createInvite().then((invite) => {
+        message.channel.send(`https://discord.gg/${invite.code}`);
+      });
+    return message.channel.createInvite().then(() => {
+      message.channel.send(`https://discord.gg/${message.guild.vanityURLCode}`);
+    });
+  }
 }
 
-module.exports = CreateInviteCommand;
+module.exports = InviteCommand;

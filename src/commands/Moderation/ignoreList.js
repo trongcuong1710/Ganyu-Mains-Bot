@@ -1,20 +1,20 @@
 const { Command } = require('discord-akairo');
 const Discord = require('discord.js');
 
-class BlacklistsCommand extends Command {
+class IgnoreListCommand extends Command {
   constructor() {
-    super('blacklists', {
-      aliases: ['blacklists', 'blist'],
+    super('ignorelist', {
+      aliases: ['ignorelist'],
       category: 'Moderation',
       channel: 'guild',
       description: {
-        description: 'List blacklisted channels.',
-        usage: 'blacklists',
+        description: 'List ignored members.',
+        usage: 'ignorelist',
       },
     });
   }
 
-  async exec(message, args) {
+  async exec(message) {
     const roles = [
       '803065968426352640', // TDA's owner role
       '786025543124123698', // Admin
@@ -35,22 +35,23 @@ class BlacklistsCommand extends Command {
         );
     }
 
-    const blacklists = await this.client.db.blacklists.find();
-    if (!blacklists.length)
+    const ignoreList = await this.client.db.ignoreList.find();
+
+    if (!ignoreList.length)
       return message.channel.send(
         new Discord.MessageEmbed({
           color: 'BLUE',
-          description: `There are no blacklisted channels in the database.`,
+          description: `There are no ignored members in the database.`,
         })
       );
     message.channel.send(
       new Discord.MessageEmbed({
         color: 'BLUE',
-        title: `Blacklisted Channels`,
-        description: blacklists
+        title: `List of Ignored Members`,
+        description: ignoreList
           .map(
             (x) =>
-              `**Blacklisted Channel:** ${x.channel_id}\n**Blacklisted By:** ${x.blacklistedBy}`
+              `**Ignored Member:** ${x.member_id}\n**Ignored By**: ${message.author}`
           )
           .join('\n\n'),
       })
@@ -58,4 +59,4 @@ class BlacklistsCommand extends Command {
   }
 }
 
-module.exports = BlacklistsCommand;
+module.exports = IgnoreListCommand;

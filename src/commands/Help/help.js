@@ -1,14 +1,13 @@
 const { Command } = require('discord-akairo');
 const Discord = require('discord.js');
-const paginationEmbed = require('discord.js-pagination');
 
 class HelpCommand extends Command {
   constructor() {
     super('help', {
       aliases: ['help', 'h'],
       description: {
-        usage: 'help',
-        description: 'Summons the help menu or shows info about a command.',
+        usage: 'help <command>',
+        description: 'In development.',
       },
       args: [
         {
@@ -20,48 +19,47 @@ class HelpCommand extends Command {
   }
 
   async exec(message, args) {
+    const prefix = this.client.commandHandler.prefix;
     if (!args.command)
       return message.channel.send(
         new Discord.MessageEmbed({
-          description: `Help command has been removed.`,
+          color: 'RED',
+          description: `In development.\n\n[You can donate my programmer here!](https://ko-fi.com/zylasden)`,
         })
       );
 
-    const helpCmdWithoutAliasesEmbed = new Discord.MessageEmbed()
-      .addFields(
-        {
-          name: `\`${args.command.id}\``,
-          value: `${args.command.description.description}`,
-        },
-        {
-          name: 'Usage',
-          value: `\`${
-            this.client.commandHandler.prefix + args.command.description.usage
-          }\``,
-        }
-      )
-      .setFooter(`Category: ${args.command.categoryID}`);
-
-    if (args.command.aliases == args.command.id)
-      return message.channel.send(helpCmdWithoutAliasesEmbed);
-
-    const helpCmdWithAliasesEmbed = new Discord.MessageEmbed()
-      .addFields(
-        {
-          name: `\`${args.command}\` **/** \`${args.command.aliases[1]}\``,
-          value: `${args.command.description.description}`,
-        },
-        {
-          name: 'Usage',
-          value: `\`${
-            this.client.commandHandler.prefix + args.command.description.usage
-          }\``,
-        }
-      )
-      .setFooter(`Category: ${args.command.categoryID}`);
-
-    if (args.command.aliases)
-      return message.channel.send(helpCmdWithAliasesEmbed);
+    return message.channel.send(
+      new Discord.MessageEmbed({
+        color: 'BLUE',
+        fields: [
+          {
+            name: `Command`,
+            value: args.command.id,
+            inline: true,
+          },
+          {
+            name: `Aliases`,
+            value:
+              args.command.aliases.length > 1
+                ? args.command.aliases
+                    .filter((al) => al !== args.command.id)
+                    .join(`\n`)
+                : 'None.',
+            inline: true,
+          },
+          {
+            name: `Usage`,
+            value: `\`${prefix + args.command.description.usage}\``,
+            inline: false,
+          },
+          {
+            name: `Description`,
+            value: args.command.description.description,
+            inline: false,
+          },
+        ],
+      })
+    );
   }
 }
 

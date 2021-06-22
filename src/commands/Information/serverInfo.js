@@ -1,76 +1,113 @@
 const { Command } = require('discord-akairo');
-const Discord = require('discord.js');
+const { MessageEmbed } = require('discord.js');
+const moment = require('moment');
 
+const filterLevels = {
+  DISABLED: 'Off',
+  MEMBERS_WITHOUT_ROLES: 'No Role',
+  ALL_MEMBERS: 'Everyone',
+};
+
+const verificationLevels = {
+  NONE: 'None',
+  LOW: 'Low',
+  MEDIUM: 'Medium',
+  HIGH: '(╯°□°）╯︵ ┻━┻',
+  VERY_HIGH: '┻━┻ ﾐヽ(ಠ益ಠ)ノ彡┻━┻',
+};
+
+const regions = {
+  brazil: 'Brazil',
+  europe: 'Europe',
+  hongkong: 'Hong Kong',
+  india: 'India',
+  japan: 'Japan',
+  russia: 'Russia',
+  singapore: 'Singapore',
+  southafrica: 'South Africa',
+  sydeny: 'Sydeny',
+  'us-central': 'US Central',
+  'us-east': 'US East',
+  'us-west': 'US West',
+  'us-south': 'US South',
+};
 class ServerInfoCommand extends Command {
-	constructor() {
-		super('serverinfo', {
-			aliases: ['serverinfo', 'sinfo', 'si'],
-			ownerOnly: false,
-			category: 'Info',
-			description: {
-				description: 'Sends information about the server.',
-				usage: 'serverinfo',
-			},
-			channel: 'guild',
-		});
-	}
+  constructor() {
+    super('serverinfo', {
+      aliases: ['serverinfo', 'sinfo'],
+      ownerOnly: false,
+      category: 'Information',
+      channel: 'guild',
+      description: {
+        description: 'Shows server information.',
+        usage: 'serverinfo',
+      },
+      channel: 'guild',
+    });
+  }
 
-	exec(message) {
-		function checkDays(date) {
-			let now = new Date();
-			let diff = now.getTime() - date.getTime();
-			let days = Math.floor(diff / 86400000);
-			return days + (days == 1 ? ' day' : ' days') + ' ago';
-		}
-		let region = {
-			brazil: ':flag_br: Brazil',
-			europe: ':flag_eu: Central Europe',
-			singapore: ':flag_sg: Singapore',
-			'us-central': ':flag_us: U.S. Central',
-			sydney: ':flag_au: Sydney',
-			'us-east': ':flag_us: U.S. East',
-			'us-south': ':flag_us: U.S. South',
-			'us-west': ':flag_us: U.S. West',
-			'eu-west': ':flag_eu: Western Europe',
-			'vip-us-east': ':flag_us: VIP U.S. East',
-			london: ':flag_gb: London',
-			amsterdam: ':flag_nl: Amsterdam',
-			hongkong: ':flag_hk: Hong Kong',
-			russia: ':flag_ru: Russia',
-			southafrica: ':flag_za:  South Africa',
-		};
-		const serverInfoEmbed = new Discord.MessageEmbed()
-			.setAuthor(
-				message.guild.name,
-				message.guild.iconURL({ dynamic: true, size: 256 }),
-			)
-			.addField('Name', message.guild.name, false)
-			.addField('ID', message.guild.id, false)
-			.addField('Owner', message.guild.owner, false)
-			.addField('Region', region[message.guild.region], false)
-			.addField(
-				'Total | Humans | Bots',
-				`${message.guild.members.cache.size} | ${
-					message.guild.members.cache.filter((member) => !member.user.bot).size
-				} | ${
-					message.guild.members.cache.filter((member) => member.user.bot).size
-				}`,
-				false,
-			)
-			.addField('Emoji Count', `${message.guild.emojis.cache.size}`)
-			.addField('Verification Level', message.guild.verificationLevel, false)
-			.addField('Channels', message.guild.channels.cache.size, false)
-			.addField('Roles', message.guild.roles.cache.size, false)
-			.addField(
-				'Creation Date',
-				`${message.channel.guild.createdAt
-					.toUTCString()
-					.substr(0, 16)} (${checkDays(message.channel.guild.createdAt)})`,
-				false,
-			)
-			.setThumbnail(message.guild.iconURL({ dynamic: false }));
-		message.channel.send(serverInfoEmbed);
-	}
+  async exec(message) {
+    const roles = message.guild.roles.cache
+      .sort((a, b) => b.position - a.position)
+      .map((role) => role.toString());
+    const members = message.guild.members.cache;
+    const channels = message.guild.channels.cache;
+    const emojis = message.guild.emojis.cache;
+
+    const embed = new MessageEmbed()
+      .setDescription(`**Server Info**`)
+      .setColor('BLUE')
+      .setThumbnail(message.guild.iconURL({ dynamic: true }))
+      .addField('General', [
+        `**Name:** ${message.guild.name}`,
+        `**ID:** ${message.guild.id}`,
+        `**Owner:** ${message.guild.owner.user.tag} (${message.guild.ownerID})`,
+        `**Region:** ${regions[message.guild.region]}`,
+        `**Boost Tier:** ${
+          message.guild.premiumTier
+            ? `Tier ${message.guild.premiumTier}`
+            : 'None'
+        }`,
+        `**Explicit Filter:** ${
+          filterLevels[message.guild.explicitContentFilter]
+        }`,
+        `**Verification Level:** ${
+          verificationLevels[message.guild.verificationLevel]
+        }`,
+        `**Time Created:** ${moment(message.guild.createdTimestamp).format(
+          'LT'
+        )} ${moment(message.guild.createdTimestamp).format('LL')} [${moment(
+          message.guild.createdTimestamp
+        ).fromNow()}]`,
+        '\u200b',
+      ])
+      .addField('Statistics', [
+        `**Role Count:** ${roles.length}`,
+        `**Emoji Count:** ${emojis.size}`,
+        `**Regular Emoji Count:** ${
+          emojis.filter((emoji) => !emoji.animated).size
+        }`,
+        `**Animated Emoji Count:** ${
+          emojis.filter((emoji) => emoji.animated).size
+        }`,
+        `**Member Count:** ${message.guild.memberCount}`,
+        `**Bots:** ${members.filter((member) => member.user.bot).size}`,
+        `**Text Channels:** ${
+          channels.filter((channel) => channel.type === 'text').size
+        }`,
+        `**Voice Channels:** ${
+          channels.filter((channel) => channel.type === 'voice').size
+        }`,
+        `**Boost Count:** ${message.guild.premiumSubscriptionCount || '0'}`,
+        '\u200b',
+      ])
+      .addField('Useful Links', [
+        `**Reddit:** https://www.reddit.com/r/Ganyu/`,
+        `**Ko-Fi:** https://ko-fi.com/GanyuMains`,
+      ]);
+
+    message.channel.send(embed);
+  }
 }
 
 module.exports = ServerInfoCommand;

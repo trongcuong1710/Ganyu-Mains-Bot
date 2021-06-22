@@ -1,143 +1,151 @@
 const { Command } = require('discord-akairo');
 const Discord = require('discord.js');
-const moment = require('moment');
+const roles = require('../../Constants/roles.json');
+const channels = require('../../Constants/channels.json');
 const ms = require('ms');
+const moment = require('moment');
+const prettyMilliseconds = require('pretty-ms');
 
 class MuteCommand extends Command {
-	constructor() {
-		super('mute', {
-			aliases: ['mute', 'm'],
-			ownerOnly: false,
-			category: 'Moderation',
-			channel: 'guild',
-			clientPermissions: ['MANAGE_ROLES', 'MUTE_MEMBERS'],
-			args: [
-				{
-					id: 'member',
-					type: 'member',
-				},
-				{
-					id: 'duration',
-					type: 'string',
-				},
-				{
-					id: 'reason',
-					type: 'string',
-					match: 'rest',
-				},
-			],
-			description: {
-				description: 'Mutes the member for a given duration.',
-				usage: 'mute <user> <duration> <reason>',
-			},
-		});
-	}
+  constructor() {
+    super('mute', {
+      aliases: ['mute'],
+      userPermissions: 'MUTE_MEMBERS',
+      clientPermissions: 'MUTE_MEMBERS',
+      description: {
+        description: 'Mute a member.',
+        usage: 'mute <member> <duration> <reason>',
+      },
+      args: [
+        {
+          id: 'member',
+          type: (message, phrase) => {
+            return this.client.util.resolveMember(
+              phrase,
+              message.guild.members.cache,
+              false,
+              true
+            );
+          },
+        },
+        {
+          id: 'duration',
+          type: 'string',
+          match: 'phrase',
+        },
+        {
+          id: 'reason',
+          type: 'string',
+          match: 'rest',
+        },
+      ],
+    });
+  }
 
-	async exec(message, args) {
-		if (!args.member)
-			return message.channel.send(
-				new Discord.MessageEmbed({
-					description: `Please supply a member to mute.`,
-				}),
-			);
-		if (!args.duration)
-			return message.channel.send(
-				new Discord.MessageEmbed({
-					description: `Please supply a duration to mute.`,
-				}),
-			);
-		if (!args.reason)
-			return message.channel.send(
-				new Discord.MessageEmbed({
-					description: `Please supply a reason for the mute.`,
-				}),
-			);
-		const muteRole = message.guild.roles.cache.get('786045122679668758');
-		const mutedToDMEmbed = new Discord.MessageEmbed()
-			.setTitle(`You've been muted in ${message.guild.name}`)
-			.setDescription(
-				`**Moderator:** ${message.author.tag}\n**Reason:** ${
-					args.reason
-				}\n**Muted At:** ${moment().format(
-					'MMMM Do, hh:mm:ss a',
-				)}\n**Duration:** ${ms(ms(args.duration), { long: true })}`,
-			)
+  async exec(message, args) {
+    moment.locale('en');
+    const muteRole = message.guild.roles.cache.get(roles.muteRole);
+    const prefix = this.client.commandHandler.prefix;
 
-			.setThumbnail(args.member.user.displayAvatarURL({ dynamic: true }))
-			.setFooter(
-				`If you think you're wrongfully muted, please contact an Admin.`,
-			);
-		const permRoles = [
-			'803065968426352640', // Qixing Secretary
-			'795102781346021376', // Head Admin
-			'786025543124123698', // Server Admin
-			'786025543124123699', // Network Admin
-			'786025543085981705', // Moderator
-		];
-		var i;
-		for (i = 0; i <= permRoles.length; i++) {
-			if (
-				message.member.roles.cache
-					.map((x) => x.id)
-					.filter((x) => permRoles.includes(x)).length === 0
-			)
-				return message.channel.send(
-					new Discord.MessageEmbed().setDescription(
-						"You can't do that with the permissions you have.",
-					),
-				);
-		}
-		try {
-			await args.member.roles
-				.add(muteRole.id)
-				.then(() =>
-					message.channel.send(
-						new Discord.MessageEmbed({
-							description: `${args.member} is now muted for ${ms(
-								ms(args.duration),
-								{ long: true },
-							)}`,
-						}),
-					),
-				)
-				.catch((err) => {
-					message.channel.send(
-						new Discord.MessageEmbed().setDescription(
-							`There was an error occurred while trying to mute ${args.member}.\n**Error:** ${err.message}`,
-						),
-					);
-				});
-			await setTimeout(async () => {
-				await args.member.roles
-					.remove(muteRole.id)
-					.catch((err) => {
-						message.channel.send(
-							new Discord.MessageEmbed().setDescription(
-								`There was an error occurred while trying to unmute ${args.member}.\n**Error:** ${err.message}`,
-							),
-						);
-					})
-					.then(() => {
-						message.channel.send(
-							new Discord.MessageEmbed({
-								description: `${args.member} is now unmuted.`,
-							}),
-						);
-					});
-			}, ms(args.duration));
-		} catch (err) {
-			console.log(err);
-		}
-		args.member
-			.send(mutedToDMEmbed)
-			.catch(async (err) =>
-				message.channel.send(
-					new Discord.MessageEmbed().setDescription(
-						`${args.member}'s DMs are closed, therefore I could not DM them about this.`,
-					),
-				),
-			);
-	}
+    if (!args.member)
+      return message.channel.send(
+        new Discord.MessageEmbed({
+          color: 'RED',
+          description: `\`\`\`\n${
+            prefix + this.id
+          } <member> <duration> [reason]\n      ^^^^^^^^\nmember is a required argument that is missing.\`\`\``,
+        })
+      );
+
+    if (args.member.id === message.member.id)
+      return message.channel.send(
+        new Discord.MessageEmbed({
+          color: 'RED',
+          description: `You can't silence yourself!`,
+        })
+      );
+    if (args.member === message.guild.me)
+      return message.channel.send(
+        new Discord.MessageEmbed({
+          color: 'RED',
+          description: `You can't silence me!`,
+        })
+      );
+
+    if (
+      args.member.roles.highest.position >=
+      message.member.roles.highest.position
+    )
+      return message.channel.send(
+        new Discord.MessageEmbed({
+          color: 'RED',
+          description: `You can't silence someone with an equal or higher role!`,
+        })
+      );
+
+    let duration = ms(args.duration);
+
+    if (!args.reason) args.reason = 'None Provided.';
+    if (args.reason.length > 1024) reason = reason.slice(0, 1021) + '...';
+
+    if (args.member.roles.cache.has(muteRole))
+      return message.channel.send(
+        new Discord.MessageEmbed({
+          color: 'RED',
+          description: `${args.member} is already muted.`,
+        })
+      );
+
+    await args.member.roles.add(muteRole).then(async () => {
+      await this.client.db.mutes.create({
+        member_id: args.member.id,
+        responsibleStaff: message.author.id,
+        reason: args.reason,
+        unmuteDate: Date.now() + duration,
+      });
+      message.channel.send(
+        new Discord.MessageEmbed({
+          color: 'GREEN',
+          description: `**${message.author.tag}** muted **${
+            args.member.tag
+          }** ${
+            duration
+              ? `for ${prettyMilliseconds(duration, { verbose: true })}`
+              : 'indefinitely.'
+          }`,
+        })
+      );
+      this.client.channels.cache.get(channels.punishmentLogsChannel).send(
+        new Discord.MessageEmbed({
+          color: 'GREEN',
+          title: `Muted`,
+          description: `**Offender**: ${args.member.user.tag}\n**Reason**: ${args.reason}\n**Responsible Staff**: ${message.author.tag}`,
+          footer: { text: `ID: ${args.member.id}` },
+          timestamp: new Date(),
+        })
+      );
+    });
+
+    setTimeout(async () => {
+      if (args.member.roles.cache.has(muteRole.id)) {
+        await args.member.roles.remove(muteRole).then(async () => {
+          await this.client.db.mutes.deleteOne({
+            member_id: args.member.id,
+          });
+          this.client.channels.cache.get(channels.punishmentLogsChannel).send(
+            new Discord.MessageEmbed({
+              color: 'GREEN',
+              title: `Unmuted`,
+              description: `**Offender**: ${args.member.user.tag}\n**Reason**: ${args.reason}\n**Responsible Staff**: ${message.author.tag}`,
+              footer: { text: `ID: ${args.member.id}` },
+              timestamp: new Date(),
+            })
+          );
+        });
+      }
+      return;
+    }, duration);
+  }
 }
 
 module.exports = MuteCommand;
