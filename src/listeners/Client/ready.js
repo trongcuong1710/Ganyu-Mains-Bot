@@ -15,7 +15,7 @@ class ReadyListener extends Listener {
 
   async exec() {
     console.log('Ready');
-    global.guild = this.client.guilds.cache.get(process.env.ganyuMains);
+    global.guild = this.client.guilds.cache.get(process.env.GanyuMains);
 
     //? Mute System
     //#region Handling Mutes
