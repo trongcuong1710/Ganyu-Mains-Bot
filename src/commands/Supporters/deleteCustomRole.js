@@ -69,4 +69,4 @@ class DeleteCustomRoleCommand extends Command {
   }
 }
 
-// module.exports = DeleteCustomRoleCommand;
+module.exports = DeleteCustomRoleCommand;
