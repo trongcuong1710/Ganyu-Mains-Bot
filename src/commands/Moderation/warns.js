@@ -112,7 +112,7 @@ class WarnsCommand extends Command {
           .filter((x) => roles.includes(x)).length === 0
       )
         return message.channel.send(
-          new MessageEmbed({
+          new Discord.MessageEmbed({
             color: 'RED',
             description: "You can't do that with the permissions you have.",
           })
