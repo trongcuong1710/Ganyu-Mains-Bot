@@ -9,7 +9,6 @@ class MyRoleCommand extends Command {
       ownerOnly: false,
       category: 'Moderation',
       channel: 'guild',
-      clientPermissions: 'MANAGE_ROLES',
       description: {
         description:
           'Create a custom role for yourself if you are a nitro booster.',

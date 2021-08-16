@@ -7,11 +7,11 @@ class DeleteCustomRoleCommand extends Command {
       aliases: ['deletecustomrole', 'dcr', 'delcusrole'],
       ownerOnly: false,
       category: 'Moderation',
+      userPermissions: 'ADMINISTRATOR',
       channel: 'guild',
       description: {
-        description:
-          'Create a custom role for yourself if you are a patreon booster.',
-        usage: 'myrole <role name>',
+        description: "Delete a member's custom role.",
+        usage: 'delcusrole <member>',
       },
       args: [
         {
@@ -39,9 +39,7 @@ class DeleteCustomRoleCommand extends Command {
       return message.channel.send(
         new MessageEmbed({
           color: 'RED',
-          description: `\`\`\`\n${
-            prefix + this.id
-          } <member> [reason]\n     ^^^^^^^^\nmember is a required argument that is missing.\`\`\``,
+          description: `Please specify a member!`,
         })
       );
     if (!args.reason) args.reason = '`None Provided`';

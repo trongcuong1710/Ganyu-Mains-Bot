@@ -17,13 +17,13 @@ class MyClient extends AkairoClient {
       {
         disableMentions: 'everyone',
         fetchAllMembers: true,
-        partials: ['CHANNEL', 'GUILD_MEMBER', 'MESSAGE', 'REACTION', 'USER'],
+        partials: ['CHANNEL', 'MESSAGE', 'REACTION'],
         presence: {
           activity: {
-            name: `Happy Birthday Oomfie!`,
+            name: `DM g!ticket for help!`,
             type: 'PLAYING',
           },
-          status: 'online',
+          status: 'idle',
           afk: false,
         },
       }

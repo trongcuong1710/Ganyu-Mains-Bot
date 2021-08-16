@@ -22,7 +22,7 @@ class BotInfoCommand extends Command {
     await message.channel.send(
       new MessageEmbed({
         color: 'BLUE',
-        description: `Hello, I'm Ganyu, your queen, nice to meet you!\n${
+        description: `Hello, I'm Ganyu!\n${
           this.client.users.cache.get(this.client.ownerID).username
         } is my creator, if there is anything I could do better please inform him!`,
         thumbnail: {

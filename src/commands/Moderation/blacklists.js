@@ -21,11 +21,11 @@ class BlacklistsCommand extends Command {
       '786025543085981705', // Mod
     ];
     var i;
-    for (i = 0; i <= roles.length; i++) {
+    for (i = 0; i <= permRoles.length; i++) {
       if (
         message.member.roles.cache
           .map((x) => x.id)
-          .filter((x) => roles.includes(x)).length === 0
+          .filter((x) => permRoles.includes(x)).length === 0
       )
         return message.channel.send(
           new MessageEmbed({

@@ -18,7 +18,7 @@ class RebootCommand extends Command {
       .send(
         new MessageEmbed({
           color: 'BLUE',
-          description: `Be right back!`,
+          description: `I want to sleep :c`,
         })
       )
       .then(async () => {

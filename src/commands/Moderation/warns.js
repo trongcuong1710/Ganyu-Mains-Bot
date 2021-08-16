@@ -61,30 +61,18 @@ class WarnsCommand extends Command {
         return await message.channel.send(
           new Discord.MessageEmbed({
             color: 'GREEN',
-            description: `k!removewarns ${args.member} ${w.map(
+            description: `.removewarn ${args.member} ${w.map(
               (x) => x.warnID
-            )} to remove a warning.`,
+            )} to remove a warning.\n\n**Warn ID**: ${w.map(
+              (x) => x.warnID
+            )}\n**Responsible Staff**: ${w.map(
+              (x) => x.warnedStaff
+            )}\n**Reason**: ${w
+              .map((x) => x.reason)
+              .join('\n')}\n**Date**: ${w.map((x) =>
+              moment(x.when).format('LLLL')
+            )}`,
             fields: [
-              {
-                name: 'Warn ID',
-                value: w.map((x) => x.warnID),
-                inline: true,
-              },
-              {
-                name: 'Moderator',
-                value: w.map((x) => x.warnedStaff),
-                inline: true,
-              },
-              {
-                name: 'Reason',
-                value: w.map((x) => x.reason).join('\n'),
-                inline: false,
-              },
-              {
-                name: 'Warned At',
-                value: w.map((x) => moment(x.when).format('LLLL')),
-                inline: true,
-              },
               {
                 name: `Remove`,
                 value: `${this.client.commandHandler.prefix}removewarn ${
@@ -99,20 +87,21 @@ class WarnsCommand extends Command {
   }
 
   async exec(message, args) {
-    const roles = [
+    const permRoles = [
       '803065968426352640', // TDA's owner role
       '786025543124123698', // Admin
       '786025543085981705', // Mod
+      '798059053850034186', // Trial Mods
     ];
     var i;
-    for (i = 0; i <= roles.length; i++) {
+    for (i = 0; i <= permRoles.length; i++) {
       if (
         message.member.roles.cache
           .map((x) => x.id)
-          .filter((x) => roles.includes(x)).length === 0
+          .filter((x) => permRoles.includes(x)).length === 0
       )
         return message.channel.send(
-          new Discord.MessageEmbed({
+          new MessageEmbed({
             color: 'RED',
             description: "You can't do that with the permissions you have.",
           })
@@ -124,9 +113,7 @@ class WarnsCommand extends Command {
       return message.channel.send(
         new Discord.MessageEmbed({
           color: 'RED',
-          description: `\`\`\`\n${
-            prefix + this.id
-          } <member> <warnID>\n       ^^^^^^^^\nmember is a required argument that is missing.\`\`\``,
+          description: `Please specify a member.`,
         })
       );
     const warns = await this.client.db.warns.find({

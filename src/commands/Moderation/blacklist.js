@@ -23,7 +23,7 @@ class BlacklistCommand extends Command {
         },
       ],
       description: {
-        description: 'Disables/Enables Ganyu in a given channel.',
+        description: 'Disables/Enables eula in a given channel.',
         usage: 'blacklist <channel>',
       },
     });
@@ -43,23 +43,19 @@ class BlacklistCommand extends Command {
           .map((x) => x.id)
           .filter((x) => roles.includes(x)).length === 0
       )
-        return message.channel.send(
-          new MessageEmbed({
+        return await message.channel.send(
+          new Discord.MessageEmbed({
             color: 'RED',
             description: "You can't do that with the permissions you have.",
           })
         );
     }
 
-    const prefix = this.client.commandHandler.prefix;
-
     if (!args.channel)
       return message.channel.send(
         new Discord.MessageEmbed({
           color: 'RED',
-          description: `\`\`\`\n${
-            prefix + this.id
-          } <channel>\n           ^^^^^^^^^\nchannel is a required argument that is missing.\`\`\``,
+          description: `Please specify a channel.`,
         })
       );
 

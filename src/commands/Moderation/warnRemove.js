@@ -36,37 +36,33 @@ class RemoveWarnCommand extends Command {
 
   async exec(message, args) {
     moment.locale('en');
-    const prefix = this.client.commandHandler.prefix;
     if (!args.member)
       return message.channel.send(
         new MessageEmbed({
           color: 'RED',
-          description: `\`\`\`\n${
-            prefix + this.id
-          } <member> <warnID>\n            ^^^^^^^^\nmember is a required argument that is missing.\`\`\``,
+          description: `Please specify a member.`,
         })
       );
     if (!args.warnID)
       return message.channel.send(
         new MessageEmbed({
           color: 'RED',
-          description: `\`\`\`\n${
-            prefix + this.id
-          } <member> <warnID>\n                     ^^^^^^^^\nwarnID is a required argument that is missing.\`\`\``,
+          description: `Please specify a warnID.`,
         })
       );
 
-    const roles = [
+    const permRoles = [
       '803065968426352640', // TDA's owner role
       '786025543124123698', // Admin
       '786025543085981705', // Mod
+      '798059053850034186', // Trial Mods
     ];
     var i;
-    for (i = 0; i <= roles.length; i++) {
+    for (i = 0; i <= permRoles.length; i++) {
       if (
         message.member.roles.cache
           .map((x) => x.id)
-          .filter((x) => roles.includes(x)).length === 0
+          .filter((x) => permRoles.includes(x)).length === 0
       )
         return message.channel.send(
           new MessageEmbed({
@@ -105,6 +101,22 @@ class RemoveWarnCommand extends Command {
               timestamp: new Date(),
             })
           );
+        args.member
+          .send(
+            new MessageEmbed({
+              color: 'RED',
+              title: `A warn has been removed you in ${global.guild.name}.`,
+              description: `**Responsible Staff**: ${
+                message.author.tag || message.author.username || message.author
+              }\n**Reason was**: ${warnReasonWas
+                .map((x) => x.reason)
+                .join('\n')}`,
+              timestamp: new Date(),
+            })
+          )
+          .catch((_) => {
+            return;
+          });
       });
   }
 }

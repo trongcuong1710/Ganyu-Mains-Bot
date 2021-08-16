@@ -28,7 +28,7 @@ class EmbedCommand extends Command {
           .map((x) => x.id)
           .filter((x) => roles.includes(x)).length === 0
       )
-        return message.channel.send(
+        return await message.channel.send(
           new MessageEmbed({
             color: 'RED',
             description: "You can't do that with the permissions you have.",

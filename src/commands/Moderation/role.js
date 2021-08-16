@@ -1,6 +1,8 @@
 const { Command } = require('discord-akairo');
 const Discord = require('discord.js');
+const { arg } = require('mathjs');
 const moment = require('moment');
+const channels = require('../../Constants/channels.json');
 
 class RoleCommand extends Command {
   constructor() {
@@ -8,7 +10,6 @@ class RoleCommand extends Command {
       aliases: ['role'],
       category: 'Moderation',
       userPermissions: 'MANAGE_ROLES',
-      clientPermissions: 'MANAGE_ROLES',
       args: [
         {
           id: 'member',
@@ -43,14 +44,11 @@ class RoleCommand extends Command {
 
   async exec(message, args) {
     moment.locale('en');
-    const prefix = this.client.commandHandler.prefix;
     if (!args.member)
       return message.channel.send(
         new Discord.MessageEmbed({
           color: 'RED',
-          description: `\`\`\`\n${
-            prefix + this.id
-          } <member> <role>\n      ^^^^^^^^\nmember is a required argument that is missing.\`\`\``,
+          description: `Please specify a member.`,
         })
       );
 
@@ -58,9 +56,15 @@ class RoleCommand extends Command {
       return message.channel.send(
         new Discord.MessageEmbed({
           color: 'RED',
-          description: `\`\`\`\n${
-            prefix + this.id
-          } <member> <role>\n               ^^^^^^\nrole is a required argument that is missing.\`\`\``,
+          description: `Please specify a role.`,
+        })
+      );
+
+    if (args.role.position >= message.member.roles.highest.position)
+      return message.channel.send(
+        new Discord.MessageEmbed({
+          color: 'RED',
+          description: `No, duh.`,
         })
       );
 

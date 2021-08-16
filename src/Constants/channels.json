@@ -2,5 +2,6 @@
   "punishmentLogsChannel": "839414800517824513",
   "databaseLogsChannel": "839414813889265664",
   "errorLogsChannel": "839414827809636352",
-  "modMailLogsChannel": "839414982323601408"
+  "modMailLogsChannel": "839414982323601408",
+  "messageLogsChannel": "876913314721050704"
 }

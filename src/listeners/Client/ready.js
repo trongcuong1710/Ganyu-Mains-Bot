@@ -91,9 +91,7 @@ class ReadyListener extends Listener {
         messages.forEach(async (message) => {
           if (message.content == 'close ticket')
             await this.client.db.modmail
-              .deleteOne({
-                channel_id: channel.id,
-              })
+              .deleteOne({ channel_id: channel.id })
               .then(async () => {
                 await global.guild.channels.cache
                   .get(channels.modMailLogsChannel)

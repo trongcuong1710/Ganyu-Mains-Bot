@@ -102,7 +102,7 @@ class ServerInfoCommand extends Command {
         '\u200b',
       ])
       .addField('Useful Links', [
-        `**Reddit:** https://www.reddit.com/r/Ganyu/`,
+        `**Reddit:** https://reddit.com/r/Ganyu`,
         `**Ko-Fi:** https://ko-fi.com/GanyuMains`,
       ]);
 
