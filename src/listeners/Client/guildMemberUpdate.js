@@ -25,7 +25,6 @@ class GuildMemberUpdateListener extends Listener {
       'I’m grateful that you’re always here and supporting us!',
       'Your support have thrilled me,and I’m overwhelmed with happiness. This encouragement is what keeps me going. Thank you for the support.',
       "Thank you; I appreciate everyone who has been a part of this. None of this could’ve been possible without your contribution. It's not like I like you... but all of you are valuable to me.",
-      "Thank you for the boost, for that I'll remove you from my vengeance list.",
     ];
 
     const nitroBoosterRole = global.guild.roles.cache.get(
