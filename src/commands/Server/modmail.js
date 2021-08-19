@@ -21,7 +21,7 @@ class ModmailCommand extends Command {
   async exec(message) {
     moment.locale('en');
     let reasoning;
-    const isIgnored = await this.client.db.eulaIgnoreList.findOne({
+    const isIgnored = await this.client.db.ignoreList.findOne({
       member_id: message.author.id,
     });
     if (isIgnored) return;
